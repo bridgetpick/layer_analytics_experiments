@@ -15,21 +15,16 @@ st.title("Raster Distribution Analysis by Country")
 
 # === USER INPUTS ===
 
-# Choose from a directory of .tif files
 tif_dir = "tif_directory"
 available_tifs = [f for f in os.listdir(tif_dir) if f.endswith(".tif")]
 selected_filename = st.selectbox("Select a GeoTIFF file", available_tifs)
-
-# Full path to selected file
 uploaded_file = os.path.join(tif_dir, selected_filename)
 
-# === HELPER ===
 def clean_label(label, max_chars=12):
     return '\n'.join([label[i:i+max_chars] for i in range(0, len(label), max_chars)])
 
 # === MAIN PROCESSING ===
 if uploaded_file:
-    # Load country boundaries
     url = "https://github.com/nvkelso/natural-earth-vector/raw/master/geojson/ne_110m_admin_0_countries.geojson"
     response = requests.get(url)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".geojson") as tmpfile:
@@ -45,17 +40,18 @@ if uploaded_file:
         band = np.where(band == nodata, np.nan, band)
         band_flat = band[~np.isnan(band)]
 
-        # Compute actual value range
+        # Get actual min/max or percentiles
         real_min = float(np.nanmin(band_flat))
         real_max = float(np.nanmax(band_flat))
 
-        # OPTIONAL: Percentile clipping (uncomment to use)
+        # Optional: clip extremes
         # real_min = float(np.nanpercentile(band_flat, 1))
         # real_max = float(np.nanpercentile(band_flat, 99))
 
+        # Show detected value range
         st.write(f"Real raster value range: **{real_min:.2f}** to **{real_max:.2f}**")
 
-        # Dynamic sliders
+        # Use dynamic sliders
         value_min, value_max = st.slider(
             "Select Raster Value Range",
             min_value=real_min,
@@ -86,7 +82,6 @@ if uploaded_file:
             rows, cols = np.where(match_mask)
             xs, ys = xy(transform, rows, cols)
 
-            # Polygons for matched pixels
             pixel_width = transform[0]
             pixel_height = -transform[4]
             polygons = [
@@ -96,14 +91,12 @@ if uploaded_file:
             ]
             pixels = gpd.GeoDataFrame(geometry=polygons, crs=crs)
 
-            # Reproject to equal-area CRS
             equal_area_crs = "EPSG:6933"
             pixels = pixels.to_crs(equal_area_crs)
             world_proj = world.to_crs(equal_area_crs)
 
             pixels["pixel_area_km2"] = pixels.geometry.area / 1e6
 
-            # Spatial join and aggregation
             joined = gpd.sjoin(pixels, world_proj, how="inner", predicate="intersects")
             summary = joined.groupby("ADMIN").agg(
                 matched_pixels=("geometry", "count"),
@@ -115,12 +108,11 @@ if uploaded_file:
             summary["percent_covered"] = (100 * summary["area_km2"] / summary["country_area_km2"]).round(4)
             summary["area_km2"] = summary["area_km2"].round(2)
 
-            # Display summary
             display_summary = summary[["ADMIN", "matched_pixels", "area_km2", "percent_covered"]]
             st.subheader("Country Summary Table")
             st.dataframe(display_summary.sort_values("matched_pixels", ascending=False))
 
-            # Bar plot: matched pixels
+            # Plot 1: Top countries by matched pixels
             top_summary = display_summary.sort_values("matched_pixels", ascending=False).head(top_n)
             top_summary["ADMIN"] = top_summary["ADMIN"].apply(clean_label)
 
@@ -135,7 +127,7 @@ if uploaded_file:
             plt.tight_layout()
             st.pyplot(fig2)
 
-            # Bar plot: percent covered
+            # Plot 2: Top countries by % coverage
             top_covered = display_summary.sort_values("percent_covered", ascending=False).head(top_n)
             top_covered["ADMIN"] = top_covered["ADMIN"].apply(clean_label)
 
