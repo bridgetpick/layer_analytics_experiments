@@ -15,6 +15,7 @@ st.title("Raster Distribution Analysis by Country")
 
 # Debug: Confirm the app is running
 st.write("✅ Running app_sandbox.py")
+st.write("🧪 THIS IS DEFINITELY app_sandbox.py")
 
 # === USER INPUTS ===
 tif_dir = "tif_directory"
