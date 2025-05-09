@@ -40,18 +40,18 @@ if uploaded_file:
         band = np.where(band == nodata, np.nan, band)
         band_flat = band[~np.isnan(band)]
 
-        # Get actual min/max or percentiles
+        # Get true value range
         real_min = float(np.nanmin(band_flat))
         real_max = float(np.nanmax(band_flat))
 
-        # Optional: clip extremes
+        # (Optional) clip extreme outliers to 1st–99th percentile:
         # real_min = float(np.nanpercentile(band_flat, 1))
         # real_max = float(np.nanpercentile(band_flat, 99))
 
-        # Show detected value range
-        st.write(f"Real raster value range: **{real_min:.2f}** to **{real_max:.2f}**")
+        # Show value range
+        st.write(f"Raster value range: **{real_min:.2f}** to **{real_max:.2f}**")
 
-        # Use dynamic sliders
+        # Dynamic range slider
         value_min, value_max = st.slider(
             "Select Raster Value Range",
             min_value=real_min,
@@ -112,7 +112,7 @@ if uploaded_file:
             st.subheader("Country Summary Table")
             st.dataframe(display_summary.sort_values("matched_pixels", ascending=False))
 
-            # Plot 1: Top countries by matched pixels
+            # Plot 1: Matched Pixels
             top_summary = display_summary.sort_values("matched_pixels", ascending=False).head(top_n)
             top_summary["ADMIN"] = top_summary["ADMIN"].apply(clean_label)
 
@@ -127,7 +127,7 @@ if uploaded_file:
             plt.tight_layout()
             st.pyplot(fig2)
 
-            # Plot 2: Top countries by % coverage
+            # Plot 2: % Area Covered
             top_covered = display_summary.sort_values("percent_covered", ascending=False).head(top_n)
             top_covered["ADMIN"] = top_covered["ADMIN"].apply(clean_label)
 
