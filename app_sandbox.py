@@ -13,11 +13,9 @@ import os
 st.set_page_config(page_title="Raster Distribution Viewer", layout="wide")
 st.title("Raster Distribution Analysis by Country")
 
-# Debug: Confirm script is running
 st.write("✅ Running app_sandbox.py")
 
 # === USER INPUTS ===
-
 tif_dir = "tif_directory"
 available_tifs = [f for f in os.listdir(tif_dir) if f.endswith(".tif")]
 selected_filename = st.selectbox("Select a GeoTIFF file", available_tifs)
@@ -43,7 +41,7 @@ if uploaded_file:
 
         st.write("DEBUG: nodata value =", nodata)
 
-        # Handle nodata correctly
+        # Handle nodata
         if nodata is not None:
             band = np.where(band == nodata, np.nan, band)
 
@@ -57,11 +55,14 @@ if uploaded_file:
         real_min = float(np.nanmin(band_flat))
         real_max = float(np.nanmax(band_flat))
 
-        # Show detected value range
         st.write(f"🎯 Raster value range: **{real_min:.2f}** to **{real_max:.2f}**")
         st.write("DEBUG: Using real_min =", real_min, "real_max =", real_max)
 
-        # Dynamic sliders
+        # Optional: reset
+        if st.button("🔄 Reset Slider"):
+            st.experimental_rerun()
+
+        # Slider
         value_min, value_max = st.slider(
             "Select Raster Value Range",
             min_value=real_min,
