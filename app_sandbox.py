@@ -10,12 +10,12 @@ from shapely.geometry import box
 import matplotlib.pyplot as plt
 import os
 
+
 st.set_page_config(page_title="Raster Distribution Viewer", layout="wide")
 st.title("Raster Distribution Analysis by Country")
 
-# Debug: Confirm the app is running
+# Confirm script execution
 st.write("✅ Running app_sandbox.py")
-st.write("🧪 THIS IS DEFINITELY app_sandbox.py")
 
 # === USER INPUTS ===
 tif_dir = "tif_directory"
@@ -41,13 +41,14 @@ if uploaded_file:
         crs = src.crs
         nodata = src.nodata
 
-        # Handle nodata
-        st.write("DEBUG: nodata value =", nodata)
+        
+
+        # Replace nodata with NaN
         if nodata is not None:
             band = np.where(band == nodata, np.nan, band)
 
         band_flat = band[~np.isnan(band)]
-        st.write("DEBUG: band_flat length =", len(band_flat))
+       
 
         if len(band_flat) == 0:
             st.error("No valid data found in this raster layer.")
@@ -55,9 +56,9 @@ if uploaded_file:
 
         real_min = float(np.nanmin(band_flat))
         real_max = float(np.nanmax(band_flat))
-        st.write(f"🎯 Raster value range: **{real_min:.2f}** to **{real_max:.2f}**")
+        
 
-        # ✅ THE ONLY slider you should have:
+        # ✅ THIS IS THE ONLY SLIDER YOU SHOULD HAVE:
         value_min, value_max = st.slider(
             "Select Raster Value Range",
             min_value=real_min,
