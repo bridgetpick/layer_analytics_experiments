@@ -13,6 +13,7 @@ import os
 st.set_page_config(page_title="Raster Distribution Viewer", layout="wide")
 st.title("Raster Distribution Analysis by Country")
 
+# Debug: Confirm the app is running
 st.write("✅ Running app_sandbox.py")
 
 # === USER INPUTS ===
@@ -39,9 +40,8 @@ if uploaded_file:
         crs = src.crs
         nodata = src.nodata
 
-        st.write("DEBUG: nodata value =", nodata)
-
         # Handle nodata
+        st.write("DEBUG: nodata value =", nodata)
         if nodata is not None:
             band = np.where(band == nodata, np.nan, band)
 
@@ -54,15 +54,9 @@ if uploaded_file:
 
         real_min = float(np.nanmin(band_flat))
         real_max = float(np.nanmax(band_flat))
-
         st.write(f"🎯 Raster value range: **{real_min:.2f}** to **{real_max:.2f}**")
-        st.write("DEBUG: Using real_min =", real_min, "real_max =", real_max)
 
-        # Optional: reset
-        if st.button("🔄 Reset Slider"):
-            st.experimental_rerun()
-
-        # Slider
+        # ✅ THE ONLY slider you should have:
         value_min, value_max = st.slider(
             "Select Raster Value Range",
             min_value=real_min,
@@ -74,7 +68,6 @@ if uploaded_file:
 
         top_n = st.number_input("Top N Countries to Display", min_value=1, value=10)
 
-        # Histogram
         st.subheader("Histogram of All Raster Values")
         fig1, ax1 = plt.subplots()
         ax1.hist(band_flat, bins=50, color='steelblue', edgecolor='black')
@@ -123,7 +116,6 @@ if uploaded_file:
             st.subheader("Country Summary Table")
             st.dataframe(display_summary.sort_values("matched_pixels", ascending=False))
 
-            # Plot 1: Matched Pixels
             top_summary = display_summary.sort_values("matched_pixels", ascending=False).head(top_n)
             top_summary["ADMIN"] = top_summary["ADMIN"].apply(clean_label)
 
@@ -138,7 +130,6 @@ if uploaded_file:
             plt.tight_layout()
             st.pyplot(fig2)
 
-            # Plot 2: % Area Covered
             top_covered = display_summary.sort_values("percent_covered", ascending=False).head(top_n)
             top_covered["ADMIN"] = top_covered["ADMIN"].apply(clean_label)
 
