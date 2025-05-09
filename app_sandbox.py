@@ -13,6 +13,9 @@ import os
 st.set_page_config(page_title="Raster Distribution Viewer", layout="wide")
 st.title("Raster Distribution Analysis by Country")
 
+# Debug: Confirm script is running
+st.write("✅ Running app_sandbox.py")
+
 # === USER INPUTS ===
 
 tif_dir = "tif_directory"
@@ -37,21 +40,28 @@ if uploaded_file:
         transform = src.transform
         crs = src.crs
         nodata = src.nodata
-        band = np.where(band == nodata, np.nan, band)
-        band_flat = band[~np.isnan(band)]
 
-        # Get true value range
+        st.write("DEBUG: nodata value =", nodata)
+
+        # Handle nodata correctly
+        if nodata is not None:
+            band = np.where(band == nodata, np.nan, band)
+
+        band_flat = band[~np.isnan(band)]
+        st.write("DEBUG: band_flat length =", len(band_flat))
+
+        if len(band_flat) == 0:
+            st.error("No valid data found in this raster layer.")
+            st.stop()
+
         real_min = float(np.nanmin(band_flat))
         real_max = float(np.nanmax(band_flat))
 
-        # (Optional) clip extreme outliers to 1st–99th percentile:
-        # real_min = float(np.nanpercentile(band_flat, 1))
-        # real_max = float(np.nanpercentile(band_flat, 99))
+        # Show detected value range
+        st.write(f"🎯 Raster value range: **{real_min:.2f}** to **{real_max:.2f}**")
+        st.write("DEBUG: Using real_min =", real_min, "real_max =", real_max)
 
-        # Show value range
-        st.write(f"Raster value range: **{real_min:.2f}** to **{real_max:.2f}**")
-
-        # Dynamic range slider
+        # Dynamic sliders
         value_min, value_max = st.slider(
             "Select Raster Value Range",
             min_value=real_min,
